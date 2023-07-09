@@ -33,6 +33,9 @@ func (j jsConnection) QueueSubscribe(s string, q string, handler nats.MsgHandler
 		// find & bind stream based on subscription subject
 		opts = append(opts, nats.BindStream(""))
 	}
+	if q != "" {
+		opts = append(opts, nats.Bind(s, q))
+	}
 
 	return j.js.QueueSubscribe(s, q, handler, opts...)
 }
