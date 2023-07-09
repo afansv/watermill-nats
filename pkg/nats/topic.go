@@ -42,11 +42,11 @@ func (b *topicInterpreter) ensureConsumer(topic string) error {
 	if err != nil {
 		_, err = b.js.AddConsumer(topic, &nats.ConsumerConfig{
 			DeliverSubject: subjectDetail.QueueGroup,
-
-			Durable:     subjectDetail.QueueGroup,
-			Name:        subjectDetail.QueueGroup,
-			Description: "added by watermill-nats",
-			AckWait:     b.ackWaitTimeout,
+			DeliverGroup:   subjectDetail.QueueGroup,
+			Durable:        subjectDetail.QueueGroup,
+			Name:           subjectDetail.QueueGroup,
+			Description:    "added by watermill-nats",
+			AckWait:        b.ackWaitTimeout,
 		})
 		if err != nil {
 			return err
