@@ -23,7 +23,7 @@ type jsConnection struct {
 	cfg  JetStreamConfig
 }
 
-// Subscribe subscribes to a JetStream subject
+// QueueSubscribe subscribes to a JetStream subject
 func (j jsConnection) QueueSubscribe(s string, q string, handler nats.MsgHandler) (*nats.Subscription, error) {
 	opts := j.cfg.SubscribeOptions
 
@@ -32,6 +32,9 @@ func (j jsConnection) QueueSubscribe(s string, q string, handler nats.MsgHandler
 	} else {
 		// find & bind stream based on subscription subject
 		opts = append(opts, nats.BindStream(""))
+	}
+	if q != "" {
+		opts = append(opts, nats.Bind(s, q))
 	}
 
 	return j.js.QueueSubscribe(s, q, handler, opts...)

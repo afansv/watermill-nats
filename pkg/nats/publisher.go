@@ -109,7 +109,7 @@ func NewPublisherWithNatsConn(conn *nats.Conn, config PublisherPublishConfig, lo
 			return nil, err
 		}
 
-		interpreter = newTopicInterpreter(js, config.SubjectCalculator, "")
+		interpreter = newTopicInterpreter(js, config.SubjectCalculator, 0, "")
 	}
 
 	return &Publisher{

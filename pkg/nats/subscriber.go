@@ -213,7 +213,7 @@ func NewSubscriberWithNatsConn(conn *nats.Conn, config SubscriberSubscriptionCon
 			return nil, err
 		}
 
-		interpreter = newTopicInterpreter(js, config.SubjectCalculator, config.QueueGroupPrefix)
+		interpreter = newTopicInterpreter(js, config.SubjectCalculator, config.AckWaitTimeout, config.QueueGroupPrefix)
 	}
 
 	return &Subscriber{
@@ -276,9 +276,12 @@ func (s *Subscriber) Subscribe(ctx context.Context, topic string) (<-chan *messa
 // SubscribeInitialize offers a way to ensure the stream for a topic exists prior to subscribe
 func (s *Subscriber) SubscribeInitialize(topic string) error {
 	err := s.topicInterpreter.ensureStream(topic)
-
 	if err != nil {
-		return errors.Wrap(err, "cannot initialize subscribe")
+		return errors.Wrap(err, "cannot initialize stream")
+	}
+	err = s.topicInterpreter.ensureConsumer(topic)
+	if err != nil {
+		return errors.Wrap(err, "cannot initialize consumer")
 	}
 	return nil
 }

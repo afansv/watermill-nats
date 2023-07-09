@@ -1,16 +1,24 @@
 package nats
 
 import (
+	"time"
+
 	"github.com/nats-io/nats.go"
 )
 
 type topicInterpreter struct {
 	js                nats.JetStreamManager
 	subjectCalculator SubjectCalculator
+	ackWaitTimeout    time.Duration
 	queueGroupPrefix  string
 }
 
-func newTopicInterpreter(js nats.JetStreamManager, formatter SubjectCalculator, queueGroupPrefix string) *topicInterpreter {
+func newTopicInterpreter(
+	js nats.JetStreamManager,
+	formatter SubjectCalculator,
+	ackWaitTimeout time.Duration,
+	queueGroupPrefix string,
+) *topicInterpreter {
 	if formatter == nil {
 		// this should always be setup to the default
 		panic("no subject calculator")
@@ -19,8 +27,31 @@ func newTopicInterpreter(js nats.JetStreamManager, formatter SubjectCalculator, 
 	return &topicInterpreter{
 		js:                js,
 		subjectCalculator: formatter,
+		ackWaitTimeout:    ackWaitTimeout,
 		queueGroupPrefix:  queueGroupPrefix,
 	}
+}
+
+func (b *topicInterpreter) ensureConsumer(topic string) error {
+	subjectDetail := b.subjectCalculator(b.queueGroupPrefix, topic)
+	if subjectDetail.QueueGroup == "" {
+		return nil
+	}
+
+	_, err := b.js.ConsumerInfo(topic, subjectDetail.QueueGroup)
+	if err != nil {
+		_, err = b.js.AddConsumer(topic, &nats.ConsumerConfig{
+			Durable:     subjectDetail.QueueGroup,
+			Name:        subjectDetail.QueueGroup,
+			Description: "added by watermill-nats",
+			AckWait:     b.ackWaitTimeout,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (b *topicInterpreter) ensureStream(topic string) error {
