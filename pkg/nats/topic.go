@@ -41,8 +41,7 @@ func (b *topicInterpreter) ensureConsumer(topic string) error {
 	_, err := b.js.ConsumerInfo(topic, subjectDetail.QueueGroup)
 	if err != nil {
 		_, err = b.js.AddConsumer(topic, &nats.ConsumerConfig{
-			DeliverSubject: topic,
-			DeliverGroup:   subjectDetail.QueueGroup,
+			DeliverSubject: subjectDetail.QueueGroup,
 
 			Durable:     subjectDetail.QueueGroup,
 			Name:        subjectDetail.QueueGroup,
